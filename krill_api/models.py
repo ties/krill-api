@@ -14,16 +14,54 @@ class CaHandle:
     handle: str
 
 @dataclass
-class KrillExchange:
-    timestamp: int
-    uri: str
-    result: str
+class KrillIdCert:
+    public_key: str
+    base64: str
+    hash: str
+
+
+@dataclass
+class KrillParentRef:
+    handle: str
+    kind: str
+
     
 @dataclass
 class KrillResources:
     asn: str
     ipv4: str
     ipv6: str
+
+@dataclass
+class KrillCaStatus:
+    handle: str
+    id_cert: KrillIdCert
+    repo_info: object
+    parents: KrillParentRef
+    resources: KrillResources
+    resource_classes: object
+    children: List[object]
+    suspended_children: List[object]
+
+    @staticmethod
+    def from_data(data: Dict[str, object]) -> 'KrillCaStatus':
+        return KrillCaStatus(
+            handle=data.get('handle'),
+            id_cert=KrillIdCert(**data.get('id_cert')),
+            repo_info=data.get('repo_info'),
+            parents=[KrillParentRef(**p) for p in data.get('parents')],
+            resources=KrillResources(**data.get('resources')),
+            resource_classes=data.get('resource_classes'),
+            children=data.get('children'),
+            suspended_children=data.get('suspended_children')
+        )
+
+@dataclass
+class KrillExchange:
+    timestamp: int
+    uri: str
+    result: str
+
 
 @dataclass(repr=False)
 class KrillIssuedCert:
@@ -84,7 +122,10 @@ class KrillParentHandle:
     
 
 @dataclass
-class CaDeleteFailure:
+class KrillApiError(Exception):
     label: str
     msg: str
     args: Dict[str, object]
+
+    def __post_init__(self) -> None:
+        super().__init__(f"{self.label}: {self.msg}")

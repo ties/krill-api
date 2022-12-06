@@ -8,7 +8,7 @@ import urllib
 from contextlib import asynccontextmanager
 from typing import Dict, Optional, List
 
-from .models import KrillParentHandle, CaHandle, CaDeleteFailure, KrillStatusInfo
+from .models import KrillApiError, KrillParentHandle, KrillCaStatus, CaHandle, KrillStatusInfo
 
 LOG = logging.getLogger(__name__)
 
@@ -38,6 +38,13 @@ class KrillApiSessionClient:
                 CaHandle(**handle)
                 for handle in (await res.json())['cas']
             ]
+    
+    async def ca_status(self, handle: str) -> KrillCaStatus:
+        async with self.__request('GET', f"/api/v1/cas/{handle}") as res:
+            body = await res.json()
+            if res.status != 200:
+                raise KrillApiError(**body)
+            return KrillCaStatus.from_data(body)
         
     async def ca_parent_status(self, handle: str) -> List[KrillParentHandle]:
         async with self.__request('GET', f"/api/v1/cas/{handle}/parents") as res:
@@ -46,7 +53,7 @@ class KrillApiSessionClient:
                 KrillParentHandle.from_data(handle, k, v) for k, v in res.items()
             ]
 
-    async def ca_delete(self, handle: str) -> CaDeleteFailure | bool:
+    async def ca_delete(self, handle: str) -> bool:
         async with self.__request('DELETE', f"/api/v1/cas/{handle}") as res:
             if res.status == 200:
                 return True
@@ -54,7 +61,7 @@ class KrillApiSessionClient:
                 LOG.debug("HTTP %s on DELETE for %s", res.status, handle)
                 body = await res.json()
                 
-                return CaDeleteFailure(**body)
+                raise KrillApiError(**body)
             
     async def info(self) -> KrillStatusInfo:
         async with self.__request('GET', '/stats/info') as res:
