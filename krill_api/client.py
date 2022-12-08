@@ -62,7 +62,17 @@ class KrillApiSessionClient:
                 body = await res.json()
                 
                 raise KrillApiError(**body)
-            
+                
+    async def bulk_parent_sync(self) -> bool:
+        """Make all CAs sync with their parent."""
+        async with self.__request('GET', f"/api/v1/bulk/cas/sync/parent") as res:
+            return res.status == 200
+
+    async def bulk_repo_sync(self) -> bool:
+        """Make all CAs sync with their repo."""
+        async with self.__request('GET', f"/api/v1/bulk/cas/sync/repo") as res:
+            return res.status == 200
+        
     async def info(self) -> KrillStatusInfo:
         async with self.__request('GET', '/stats/info') as res:
             res = await res.json()
