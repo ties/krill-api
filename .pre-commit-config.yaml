@@ -1,0 +1,40 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: local
+    hooks:
+      - id: generate-kaitai-spec
+        name: generate-kaitai-spec
+        entry: bash -c './generate.sh'
+        language: system
+        files: \.ksy$
+        pass_filenames: false
+  - repo: https://github.com/ambv/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        exclude: rpki_rtr_async/rfc8210bis.py
+        language_version: python3.11
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.31.0
+    hooks:
+      - id: yamllint
+      # args: [-c=/path/to/.yamllint]
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.1.1
+    hooks:
+      - id: autoflake
+        exclude: rpki_rtr_async/rfc8210bis.py
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        exclude: rpki_rtr_async/rfc8210bis.py
+        additional_dependencies: [flake8-typing-imports==1.12.0]
+  - repo: https://github.com/timothycrosley/isort
+    rev: '5.12.0'  # Use the revision sha / tag you want to point at
+    hooks:
+      - id: isort
+        exclude: rpki_rtr_async/rfc8210bis.py
+        additional_dependencies: [toml]
